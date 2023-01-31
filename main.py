@@ -1,6 +1,16 @@
+# coding:utf-8
+
+import os
+import PySide2
+
+
+dir_name = os.path.dirname(PySide2.__file__)
+plugin_path = os.path.join(dir_name, 'plugins', 'platforms')
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
+
+
 from guietta import Gui, III, ___, _, C, HSeparator
 from PySide2.QtWidgets import QPlainTextEdit, QTableWidget, QTableWidgetItem
-import PySide2
 from node import Node
 
 
