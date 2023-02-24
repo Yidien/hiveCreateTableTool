@@ -1,5 +1,5 @@
 # hiveCreateTableTool
-下载：default.exe[链接](https://github.com/Yidien/hiveCreateTableTool/releases/tag/%E5%B7%A5%E5%85%B7)
+下载：default.exe[\[链接\]](https://github.com/Yidien/hiveCreateTableTool/releases/tag/%E5%B7%A5%E5%85%B7)
 
 HIVE建表语句生成工具
 
