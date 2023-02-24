@@ -1,6 +1,7 @@
 # hiveCreateTableTool
-HIVE建表语句生成工具
 下载：default.exe[链接](https://github.com/Yidien/hiveCreateTableTool/releases/tag/%E5%B7%A5%E5%85%B7)
+
+HIVE建表语句生成工具
 
 根据填选项生成建表、删表、插表语句；
 ![image](https://user-images.githubusercontent.com/44423151/211314932-573cffe1-444a-44fb-b074-839d91fdacb1.png)
