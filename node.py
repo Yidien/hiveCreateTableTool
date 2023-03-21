@@ -55,7 +55,7 @@ class Node:
 
     def get_item(self):
         start = self.text.lower().find('select') + 6
-        end = self.text.lower().find('from')
+        end = self.text.lower().find(' from ')
         if start == -1 or end == -1:
             return -1
         start_distinct = self.text[start:].lower().lstrip().find('distinct')
@@ -86,8 +86,8 @@ class Node:
 
     @staticmethod
     def find_child_node(text):
-        start_from = text.lower().find('from')
-        start_join = text.lower().find('join')
+        start_from = text.lower().find(' from ')
+        start_join = text.lower().find(' join ')
         if start_from == -1 and start_join == -1:
             return None
         if start_from == -1 or (start_join != -1 and start_join < start_from):
@@ -123,7 +123,7 @@ class Node:
             start = self.find_child_node(text)
             if start is None:
                 break
-            text = text[start+4:]
+            text = text[start:]
             start, end = self.find_parentheses(text)
             if end == -1:
                 continue
