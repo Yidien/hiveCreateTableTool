@@ -47,6 +47,7 @@ class Node:
 
     @staticmethod
     def del_comment_text(text):
+        print(text)
         ret_list = ''
         while True:
             start = text.find('--')
@@ -57,8 +58,9 @@ class Node:
             start = text.find('\n')
             if start == -1:
                 return ret_list
-            text = text[start+1:]
+            text = text[start:]
         ret_list += text
+        print(ret_list)
         return ret_list
 
     @staticmethod
