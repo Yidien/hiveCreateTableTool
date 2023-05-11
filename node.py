@@ -26,7 +26,7 @@ class Node:
             text = text[end+1:]
             if not re.match(r'\s*,', text):
                 break
-        self.merger_with_code_text(text)
+        # self.merger_with_code_text(text)
         return text
 
     def merger_with_code_text(self, text):
@@ -37,7 +37,7 @@ class Node:
             if find_pos is None:
                 continue
             start_pos = find_pos.span(0)[0]
-            end_pos = find_pos.span(0)[0]
+            end_pos = find_pos.span(0)[1]
             next_word = re.search(r'\b\w*\b', code_text[find_pos.span(0)[1]+1:])
             if next_word is None or next_word.group() in key_set:
                 end_pos = find_pos.span(0)[1]
@@ -47,7 +47,6 @@ class Node:
 
     @staticmethod
     def del_comment_text(text):
-        print(text)
         ret_list = ''
         while True:
             start = text.find('--')
@@ -60,7 +59,7 @@ class Node:
                 return ret_list
             text = text[start:]
         ret_list += text
-        print(ret_list)
+        # print(ret_list)
         return ret_list
 
     @staticmethod
