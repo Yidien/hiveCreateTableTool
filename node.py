@@ -26,23 +26,27 @@ class Node:
             text = text[end+1:]
             if not re.match(r'\s*,', text):
                 break
-        # self.merger_with_code_text(text)
         return text
 
     def merger_with_code_text(self, text):
-        key_set = ('where', 'limit', 'group', 'union', 'left', 'right', 'full', 'inner', 'join')
         code_text = ''.join([(c) for c in text]).lower()
-        for key, value in self.with_node_dict.items():
-            find_pos = re.search(r'\b'+key+r'\b', code_text)
-            if find_pos is None:
-                continue
-            start_pos = find_pos.span(0)[0]
-            end_pos = find_pos.span(0)[1]
-            next_word = re.search(r'\b\w*\b', code_text[find_pos.span(0)[1]+1:])
-            if next_word is None or next_word.group() in key_set:
+        key_set = ('where', 'limit', 'group', 'union', 'left', 'right', 'full', 'inner', 'join')
+        while True:
+            circulate_flag = False
+            for key, value in self.with_node_dict.items():
+                find_pos = re.search(r'\b'+key+r'\b', code_text)
+                if find_pos is None:
+                    continue
+                circulate_flag = True
+                start_pos = find_pos.span(0)[0]
                 end_pos = find_pos.span(0)[1]
-                value += ' as ' + key + ' '
-            code_text = code_text[:start_pos] + value + code_text[end_pos:]
+                next_word = re.search(r'\b\w*\b', code_text[find_pos.span(0)[1]+1:])
+                if next_word is None or next_word.group() in key_set:
+                    end_pos = find_pos.span(0)[1]
+                    value += ' as ' + key + '_with_replace '
+                code_text = code_text[:start_pos] + value + code_text[end_pos:]
+            if circulate_flag is False:
+                break
         return code_text
 
     @staticmethod
