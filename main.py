@@ -195,7 +195,7 @@ def main():
     gui.bt_work = event_work
 
     gui.cb_dt.setChecked(True)
-    gui.cb_insert.setChecked(True)
+    # gui.cb_insert.setChecked(True)
 
     gui.run()
     return
