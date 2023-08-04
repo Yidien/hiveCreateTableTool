@@ -61,10 +61,10 @@ def resize_table_row(control):
     return
 
 
-def generate_insert_table_command(lib_name, flag_into, flag_partition):
+def generate_insert_table_command(lib_name, flag_into, flag_partition, flag_realtime):
     tmp_str = ''
     if flag_partition is True:
-        tmp_str = ' partition(dt=:dt)'
+        tmp_str = ' partition(dt=' + (':dt' if flag_realtime is False else '\'${DateUtil.addDays(dt, 1)}\'') + ')'
     return 'insert ' + ('overwrite' if flag_into is False else 'into') + ' table ' + lib_name + tmp_str
 
 
@@ -91,9 +91,10 @@ def quot_str(string):
 def generate_command(control):
     flag_into = control.cb_insert.isChecked()
     flag_partition = control.cb_dt.isChecked()
+    flag_realtime = control.cb_realtime.isChecked()
     lib_sheet_name = control.lib_name+'.'+control.sheet_name
     control.line_drop = generate_drop_table_command(lib_sheet_name)
-    control.line_insert = generate_insert_table_command(lib_sheet_name, flag_into, flag_partition)
+    control.line_insert = generate_insert_table_command(lib_sheet_name, flag_into, flag_partition, flag_realtime)
     lib_comment = quot_str(control.lib_comment)
     item_list = []
     for row in range(control.widgets['table'].rowCount()):
@@ -162,7 +163,7 @@ def main():
             [(['添加'], 'bt_add'), ___, (['删除'], 'bt_del'), ___, _, _, _,   (['生成'], 'bt_create'), ___, _, _, _, _, _, _, _, (['转换'], 'bt_transformation'), ___, (['直接生成'], 'bt_work'), ___],
             [HSeparator],
             ['__line_drop__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___],
-            ['__line_insert__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, (C('插入'), 'cb_insert')],
+            ['__line_insert__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, (C('into'), 'cb_insert'), (C('实时'), 'cb_realtime')],
             [(QPlainTextEdit, 'txt_output'), ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
@@ -192,6 +193,9 @@ def main():
     gui.bt_create = event_generate_command
     gui.bt_transformation = event_transformation_code
     gui.bt_work = event_work
+
+    gui.cb_dt.setChecked(True)
+    gui.cb_insert.setChecked(True)
 
     gui.run()
     return
