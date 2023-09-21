@@ -12,6 +12,7 @@ class Node:
         self.text = self.del_comment_text(text)
         self.raw_code_text = self.split_with_code_text(self.text)
         self.code_text = self.merger_with_code_text(self.raw_code_text)
+        print(self.code_text)
         return
 
     def split_with_code_text(self, text):
@@ -148,7 +149,7 @@ class Node:
         count = 0
         start = text.find('(')
         end = self.find_child_node(text)
-        if start == -1 or (end != -1 and end < start):
+        if start == -1 or end is None or (end != -1 and end < start):
             return -1, -1
         for index, char in enumerate(text[start:]):
             if char == '(':
@@ -173,7 +174,7 @@ class Node:
                 break
             text = text[start+4:]
             start, end = self.find_parentheses(text)
-            if end == -1:
+            if end == -1 or end >= len(text):
                 continue
             name = self.find_node_name(text[end+1:])
             if analyse_child_list == [] or name in analyse_child_list:
