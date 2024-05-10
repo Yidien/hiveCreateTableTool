@@ -31,11 +31,12 @@ def add_table_row(control, row, str_0='', str_1='string', str_2=''):
     return
 
 
-def add_current_table_row(control, str_0='', str_1='string', str_2=''):
+def add_current_table_row(control, dir, str_0='', str_1='string', str_2=''):
     current_row = control.widgets['table'].currentRow()
     if current_row == -1:
-        current_row += 1
-    add_table_row(control, current_row, str_0, str_1, str_2)
+        dir = 1
+    target_row = current_row + dir
+    add_table_row(control, target_row, str_0, str_1, str_2)
     return
 
 
@@ -122,7 +123,12 @@ def transformation_code_to_table(control):
 
 
 def event_add_table_row(gui, *args):
-    add_current_table_row(gui)
+    add_current_table_row(gui, 0)
+    return
+
+
+def event_add_table_row_after(gui, *args):
+    add_current_table_row(gui, 1)
     return
 
 
@@ -160,7 +166,7 @@ def main():
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
-            [(['添加'], 'bt_add'), ___, (['删除'], 'bt_del'), ___, _, _, _,   (['生成'], 'bt_create'), ___, _, _, _, _, _, _, _, (['转换'], 'bt_transformation'), ___, (['直接生成'], 'bt_work'), ___],
+            [(['添加'], 'bt_add'), ___, (['添后'], 'bt_add_after'), ___,(['删除'], 'bt_del'), ___, _, (['生成'], 'bt_create'), ___, _, _, _, _, _, _, _, (['转换'], 'bt_transformation'), ___, (['直接生成'], 'bt_work'), ___],
             [HSeparator],
             ['__line_drop__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___],
             ['__line_insert__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, (C('into'), 'cb_insert'), (C('实时'), 'cb_realtime')],
@@ -188,6 +194,7 @@ def main():
     add_table_row(gui, 0)
 
     gui.bt_add = event_add_table_row
+    gui.bt_add_after = event_add_table_row_after
     gui.bt_del = event_del_table_row
     gui.bt_resize = event_resize_table
     gui.bt_create = event_generate_command
