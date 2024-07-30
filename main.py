@@ -20,7 +20,7 @@ def clear_table(control):
     return
 
 
-def add_table_row(control, row, str_0='', str_1='string', str_2=''):
+def add_table_row(control, row, str_0='', str_1='string', str_2='', sheet_name=''):
     control.widgets['table'].insertRow(row)
     item = QTableWidgetItem(str_0)
     control.widgets['table'].setItem(row, 0, item)
@@ -28,15 +28,17 @@ def add_table_row(control, row, str_0='', str_1='string', str_2=''):
     control.widgets['table'].setItem(row, 1, item)
     item = QTableWidgetItem(str_2)
     control.widgets['table'].setItem(row, 2, item)
+    item = QTableWidgetItem(sheet_name)
+    control.widgets['table'].setItem(row, 3, item)
     return
 
 
-def add_current_table_row(control, dir, str_0='', str_1='string', str_2=''):
+def add_current_table_row(control, add_dir, str_0='', str_1='string', str_2='', sheet_name=''):
     current_row = control.widgets['table'].currentRow()
     if current_row == -1:
-        dir = 1
-    target_row = current_row + dir
-    add_table_row(control, target_row, str_0, str_1, str_2)
+        add_dir = 1
+    target_row = current_row + add_dir
+    add_table_row(control, target_row, str_0, str_1, str_2, sheet_name)
     return
 
 
@@ -74,14 +76,20 @@ def generate_drop_table_command(lib_name):
 
 
 def generate_create_table_command(lib_name, lib_comment, item_list, flag_partition):
-    ret_str = 'create table if not exists ' + lib_name + '\n'
-    ret_str += '(\n'
-    for item in item_list[:-1]:
-        ret_str += '    ' + item[0] + ' ' + item[1] + ' comment ' + item[2] + ',\n'
-    ret_str += '    ' + item_list[-1][0] + ' ' + item_list[-1][1] + ' comment ' + item_list[-1][2] + '\n'
-    ret_str += ') comment ' + lib_comment + '\n'
+    ret_str = 'create table if not exists ' + lib_name + '\n('
+    for item in item_list:
+        ret_str += '\n    ' + item[0] + ' ' + item[1] + ' comment ' + item[2] + ','
+    ret_str = ret_str[:-1] + '\n) comment ' + lib_comment + '\n'
     if flag_partition is True:
         ret_str += 'partitioned by (dt string)'
+    return ret_str
+
+
+def generate_select_command(item_list):
+    ret_str = 'select'
+    for item in item_list:
+        ret_str += '\n   ' + item[3] + '.' + item[0] + ','
+    ret_str = ret_str[:-1] + '\nfrom'
     return ret_str
 
 
@@ -103,22 +111,27 @@ def generate_command(control):
         item_0 = table_item.item(row, 0).text()
         item_1 = table_item.item(row, 1).text()
         item_2 = table_item.item(row, 2).text()
+        item_3 = table_item.item(row, 3).text()
         if item_0 != '' or item_2 != '':
-            item_list.append([item_0, item_1, quot_str(item_2)])
+            item_list.append([item_0, item_1, quot_str(item_2), item_3])
     if item_list:
         create_table_command = generate_create_table_command(lib_sheet_name, lib_comment, item_list, flag_partition)
         control.widgets['txt_output'].setPlainText(create_table_command)
+
+        select_command = generate_select_command(item_list)
+        control.widgets['txt_select'].setPlainText(select_command)
     return
 
 
 def transformation_code_to_table(control):
     sheet_node = Node('root', control.text_code.toPlainText())
     sheet_node.analyse_text()
-    word_list = sheet_node.get_word()
+    word_list = sheet_node.get_word(append_type='list')
     if word_list:
         clear_table(control)
-        for index, word in enumerate(word_list):
-            add_table_row(control, index, word)
+        for index, item in enumerate(word_list):
+            print(item)
+            add_table_row(control, index, item[0], sheet_name=item[1])
     return
 
 
@@ -170,7 +183,7 @@ def main():
             [HSeparator],
             ['__line_drop__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___],
             ['__line_insert__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, (C('into'), 'cb_insert'), (C('实时'), 'cb_realtime')],
-            [(QPlainTextEdit, 'txt_output'), ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___],
+            [(QPlainTextEdit, 'txt_output'), ___, ___, ___, ___, ___, ___, ___, ___, ___, (QPlainTextEdit, 'txt_select'), ___, ___, ___, ___, ___, ___, ___, ___, ___],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
@@ -178,14 +191,16 @@ def main():
             title='建表语句自动生成工具'
         )
 
-    gui.widgets['table'].setColumnCount(3)
+    gui.widgets['table'].setColumnCount(4)
     gui.widgets['table'].setHorizontalHeaderItem(0, QTableWidgetItem('字段名'))
     gui.widgets['table'].setHorizontalHeaderItem(1, QTableWidgetItem('类型'))
     gui.widgets['table'].setHorizontalHeaderItem(2, QTableWidgetItem('注释'))
+    gui.widgets['table'].setHorizontalHeaderItem(3, QTableWidgetItem('表名'))
 
     gui.widgets['table'].setColumnWidth(0, 100)
     gui.widgets['table'].setColumnWidth(1, 100)
-    gui.widgets['table'].setColumnWidth(2, 170)
+    gui.widgets['table'].setColumnWidth(2, 100)
+    gui.widgets['table'].setColumnWidth(3, 70)
 
     # gui.widgets['table'].setAlternatingRowColors(True)
     # gui.widgets['table'].verticalHeader().setVisible(False)

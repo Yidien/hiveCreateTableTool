@@ -31,7 +31,7 @@ class Node:
 
     def merger_with_code_text(self, text):
         code_text = ''.join([(c) for c in text]).lower()
-        key_set = ('where', 'limit', 'group', 'union', 'left', 'right', 'full', 'inner', 'join')
+        # key_set = ('where', 'limit', 'group', 'union', 'left', 'right', 'full', 'inner', 'join', 'as')
         while True:
             circulate_flag = False
             for key, value in self.with_node_dict.items():
@@ -41,10 +41,11 @@ class Node:
                 circulate_flag = True
                 start_pos = find_pos.span(0)[0]
                 end_pos = find_pos.span(0)[1]
-                next_word = re.search(r'\b\w*\b', code_text[find_pos.span(0)[1]+1:])
-                if next_word is None or next_word.group() in key_set:
-                    end_pos = find_pos.span(0)[1]
-                    value += ' as ' + key + '_with_replace '
+                # next_word = re.search(r'\b\w*\b', code_text[find_pos.span(0)[1]+1:])
+                next_word = re.search(r'\S*', code_text[find_pos.span(0)[1] + 1:])
+                # if next_word is None or next_word.group() in key_set:
+                if next_word.group() != 'as':
+                     value += ' as ' + key + '_with_replace '
                 code_text = code_text[:start_pos] + value + code_text[end_pos:]
             if circulate_flag is False:
                 break
@@ -122,6 +123,8 @@ class Node:
                 append_list[0] = word[1].strip()
                 append_list[1] = word[0].strip()
             self.item_list.append(append_list)
+
+        print(self.item_list)
         return end
 
     def get_analyse_child_list(self):
@@ -194,16 +197,20 @@ class Node:
         self.analyse_child_node(self.code_text[end:], analyse_child_list)
         return
 
-    def get_word(self):
+    def get_word(self, append_type='word', sheet_name=None):
         ret_list = []
         for item in self.item_list:
-            if item[0] != '*':
-                ret_list.append(item[0])
-            elif not self.child_node_list:
-                ret_list.append('*')
+            if item[0] != '*' or not self.child_node_list:
+                if append_type == 'word':
+                    ret_list.append(item[0])
+                else:
+                    ret_list.append([item[0], sheet_name])
+                                     # item[1] if sheet_name is None else sheet_name])
             elif item[1] is not None:
-                ret_list.extend(self.child_node_dict[item[1]].get_word())
+                ret_list.extend(self.child_node_dict[item[1]].get_word(append_type,
+                                                                       sheet_name if sheet_name is not None else item[1]))
             else:
                 for child_node in self.child_node_list:
-                    ret_list.extend(self.child_node_dict[child_node].get_word())
+                    ret_list.extend(self.child_node_dict[child_node].get_word(append_type,
+                                                                              sheet_name if sheet_name is not None else child_node))
         return ret_list
