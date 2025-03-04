@@ -75,14 +75,29 @@ def generate_drop_table_command(lib_name):
     return 'drop table if exists ' + lib_name
 
 
-def generate_create_table_command(lib_name, lib_comment, item_list, flag_partition):
+def generate_create_table_command(lib_name, lib_comment, item_list, flag_partition, flag_sort_orc):
     ret_str = 'create table if not exists ' + lib_name + '\n('
+
     for item in item_list:
         ret_str += '\n    ' + item[0] + ' ' + item[1] + ' comment ' + item[2] + ','
     ret_str = ret_str[:-1] + '\n) comment ' + lib_comment + '\n'
     if flag_partition is True:
-        ret_str += 'partitioned by (dt string)'
+        ret_str += 'partitioned by (dt string)\n'
+    if flag_sort_orc is True:
+        ret_str += 'stored as orc'
     return ret_str
+
+
+def generate_create_table_command_clickhouse(lib_name, item_list, flag_partition, str_order_by):
+    ret_str = 'create table if not exists ' + lib_name + '\n(' + ('\n    dt String comment \'日期\',' if flag_partition else '')
+    for item in item_list:
+        ret_str += '\n    ' + item[0] + ' ' + item[1].capitalize() + ' comment ' + item[2] + ','
+    ret_str = ret_str[:-1] + '\n) engine = CnchMergeTree()\n'
+    if flag_partition is True:
+        ret_str += 'partition by (dt)\n'
+    ret_str += 'order by (' + (str_order_by if str_order_by else 'XXXXX') + ')'
+    return ret_str
+
 
 
 def generate_select_command(item_list):
@@ -100,11 +115,13 @@ def quot_str(string):
 def generate_command(control):
     flag_into = control.cb_insert.isChecked()
     flag_partition = control.cb_dt.isChecked()
+    flag_sort_orc = control.cb_orc.isChecked()
     flag_realtime = control.cb_realtime.isChecked()
     lib_sheet_name = control.lib_name+'.'+control.sheet_name
     control.line_drop = generate_drop_table_command(lib_sheet_name)
     control.line_insert = generate_insert_table_command(lib_sheet_name, flag_into, flag_partition, flag_realtime)
     lib_comment = quot_str(control.lib_comment)
+    str_order_by = control.str_order_by
     item_list = []
     for row in range(control.widgets['table'].rowCount()):
         table_item = control.widgets['table']
@@ -115,8 +132,11 @@ def generate_command(control):
         if item_0 != '' or item_2 != '':
             item_list.append([item_0, item_1, quot_str(item_2), item_3])
     if item_list:
-        create_table_command = generate_create_table_command(lib_sheet_name, lib_comment, item_list, flag_partition)
+        create_table_command = generate_create_table_command(lib_sheet_name, lib_comment, item_list, flag_partition, flag_sort_orc)
         control.widgets['txt_output'].setPlainText(create_table_command)
+
+        create_table_command_clickhouse = generate_create_table_command_clickhouse(lib_sheet_name, item_list, flag_partition, str_order_by)
+        control.widgets['txt_output_clickhouse'].setPlainText(create_table_command_clickhouse)
 
         select_command = generate_select_command(item_list)
         control.widgets['txt_select'].setPlainText(select_command)
@@ -174,16 +194,16 @@ def event_work(gui, *args):
 def main():
     gui = Gui\
         (
-            ['库名', '__lib_name__', ___, ___, '表名', '__sheet_name__', ___, ___, '注释', '__lib_comment__', ___, ___, (C('dt分区'), 'cb_dt'), ___, '行数', '__row_count__', ___, ___, (['重置'],'bt_resize'), ___],
+            ['库名', '__lib_name__', ___, ___, '表名', '__sheet_name__', ___, ___, '注释', '__lib_comment__', _, _, _, '行数', '__row_count__', ___, ___, _, (['重置'],'bt_resize'), ___],
             [(QTableWidget, 'table'), ___, ___, ___, ___, ___, ___, ___, ___,  (QPlainTextEdit, 'text_code'),  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
-            [(['添加'], 'bt_add'), ___, (['添后'], 'bt_add_after'), ___,(['删除'], 'bt_del'), ___, _, (['生成'], 'bt_create'), ___, _, _, _, _, _, _, _, (['转换'], 'bt_transformation'), ___, (['直接生成'], 'bt_work'), ___],
+            [(['添加'], 'bt_add'), ___, (['添后'], 'bt_add_after'), ___,(['删除'], 'bt_del'), ___, _, (['生成'], 'bt_create'), ___, 'clickhouse排序字段', '__str_order_by__', _, _, _, (C('dt分区'), 'cb_dt'),  (C('orc'), 'cb_orc'), (['转换'], 'bt_transformation'), ___, (['直接生成'], 'bt_work'), ___],
             [HSeparator],
             ['__line_drop__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, ___],
             ['__line_insert__', ___, ___, ___, ___, ___, ___, ___,  ___, ___, ___, ___, ___, ___, ___, ___, ___, ___, (C('into'), 'cb_insert'), (C('实时'), 'cb_realtime')],
-            [(QPlainTextEdit, 'txt_output'), ___, ___, ___, ___, ___, ___, ___, ___, ___, (QPlainTextEdit, 'txt_select'), ___, ___, ___, ___, ___, ___, ___, ___, ___],
+            [(QPlainTextEdit, 'txt_output'), ___, ___, ___, ___, ___, ___, (QPlainTextEdit, 'txt_output_clickhouse'), ___, ___, ___, ___, ___, ___, (QPlainTextEdit, 'txt_select'),  ___, ___, ___, ___, ___],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
             [III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III, III],
@@ -217,6 +237,7 @@ def main():
     gui.bt_work = event_work
 
     gui.cb_dt.setChecked(True)
+    gui.cb_orc.setChecked(True)
     # gui.cb_insert.setChecked(True)
 
     gui.run()
