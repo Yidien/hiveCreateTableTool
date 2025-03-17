@@ -89,7 +89,7 @@ def generate_create_table_command(lib_name, lib_comment, item_list, flag_partiti
 
 
 def generate_create_table_command_clickhouse(lib_name, item_list, flag_partition, str_order_by):
-    ret_str = 'create table if not exists ' + lib_name + '\n(' + ('\n    dt String comment \'日期\',' if flag_partition else '')
+    ret_str = 'create table if not exists ' + lib_name + '\n('
     for item in item_list:
         ret_str += '\n    ' + item[0] + ' ' + item[1].capitalize() + ' comment ' + item[2] + ','
     ret_str = ret_str[:-1] + '\n) engine = CnchMergeTree()\n'
